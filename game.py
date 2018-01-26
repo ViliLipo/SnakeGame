@@ -204,10 +204,10 @@ def start():
         # Spawning apple
         if not appleExist:
             a.location = pygame.Rect(random.randint(20,screenSizeX()-20),
-                                     random.randint(20,screenSizeY()), a.size, a.size)
+                                     random.randint(20,screenSizeY()-20), a.size, a.size)
             while table.checkCollision(a.location):
-                   a.location = pygame.Rect(random.randint(20,screenSizeX()),
-                                     random.randint(20,screenSizeY()), a.size, a.size)
+                   a.location = pygame.Rect(random.randint(20,screenSizeX()-20),
+                                     random.randint(20,screenSizeY()-20), a.size, a.size)
             appleExist = True
         else:
             # Eating
