@@ -186,6 +186,7 @@ def start():
             paused = False
             escLifted = False
         if paused:
+            time.sleep(0.2)
             continue
         # Determing the direction of the snake based on input
         olddir = direction
