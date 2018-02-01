@@ -10,8 +10,27 @@ class Apple:
     color = (255,8,0)
     location = pygame.Rect
     size = 20
+    exists = False
     def draw(self, pygame, screen):
         pygame.draw.rect(screen, self.color, self.location)
+    def Action(self, pygame, screen , screenSizeX, screenSizeY, newRect, grow, score, table ):
+        if not self.exists:
+            self.location = pygame.Rect(random.randint(20,screenSizeX-20),
+                                     random.randint(20,screenSizeY-20), self.size, self.size)
+            while table.checkCollision(self.location):
+                   self.location = pygame.Rect(random.randint(20,screenSizeX -20),
+                                     random.randint(20,screenSizeY -20), self.size, self.size)
+            self.exists = True
+        else:
+            # Eating
+            if self.location.colliderect(newRect):
+                grow += 4
+                score = score + 10
+                #print("Score = ", score)
+                self.exists = False
+        self.draw(pygame, screen)
+        return grow, score
+
 
 
 
@@ -19,6 +38,9 @@ class Snake:
     color = ( 8, 255, 8)
     location =  queue.Queue()
     direction = 1
+    #def __init__(self, pygame, table, x, y):
+
+
     def draw( self, pygame, screen):
         que2 = queue.Queue()
         while not self.location.empty():
@@ -127,6 +149,59 @@ def determineLocation(direction, olddir, x, y):
 
     return x, y
 
+class Pauser:
+    isPaused = False
+    escLifted = True
+    def Action(self,pygame_key_input, screen, font, pygame):
+        #print("pauser.Action")
+        if not pygame_key_input[pygame.K_ESCAPE]:
+            self.escLifted = True
+        if pygame_key_input[pygame.K_ESCAPE] and not self.isPaused and self.escLifted :
+            #print("trying to pause")
+            self.isPaused = True
+            self.escLifted = False
+            pausedLabel = font.render("Paused", 1, (255,255,255))
+            pauseLabelLocX = screenSizeX() - 200
+            screen.blit(pausedLabel, (pauseLabelLocX, 30))
+            pygame.display.flip()
+        elif pygame_key_input[pygame.K_ESCAPE] and self.isPaused and self.escLifted :
+            #print("trying to resume")
+            self.isPaused = False
+            self.escLifted = False
+        return self.isPaused
+
+class FpsCounter :
+    tickcount = 1
+    t1 = 0
+    t2 = 0
+    frametimesum = 0
+    fps = 0
+    def _init_(self):
+        self.t1 = int(round(time.time() * 1000))
+
+    def Action(self,pygame,screen, screenSizeX, screenSizeY, font ):
+        # Measuring the frametime
+        #print(self.tickcount)
+        self.t2 = int( round(time.time() * 1000))
+        frametime = self.t2 -self.t1
+        #print("frametime: ", frametime)
+        self.frametimesum += frametime
+        self.t1 = self.t2
+        # Displaying fps
+        if self.tickcount >= 20:
+            #print("frametimesum: ", self.frametimesum)
+            avgframetime = self.frametimesum / 20
+            self.frametimesum = 0
+            self.fps = int(round(1000/avgframetime))
+            self.tickcount = 0
+        label2 = font.render(str(str(self.fps) + 'fps'), 1, (255,255,255))
+        screen.blit(label2, (screenSizeX-120, screenSizeY-40))
+        pygame.display.flip()
+        self.tickcount += 1
+
+
+
+
 def screenSizeX():
     return 800
 
@@ -145,16 +220,10 @@ def start():
     clock = pygame.time.Clock()
     done = False
     a = Apple()
-    appleExist = False
-    frametimesum =0
-    avgframetime = 0
-    fps = 0
-    escLifted = False
-    paused = False
     score = 0
-    tickcount = 1;
     myfont = pygame.font.SysFont("monospace", 40)
-    t1 = int( round(time.time() * 1000))
+    pauser = Pauser()
+    fpsCounter = FpsCounter()
     #Creating the snek
     x  = 30
     y = 30
@@ -171,8 +240,10 @@ def start():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
+        clock.tick(60)
         pressed = pygame.key.get_pressed()
         # Pause functionality
+<<<<<<< HEAD
         if not pressed[pygame.K_ESCAPE]:
             escLifted = True
         if pressed[pygame.K_ESCAPE] and not paused and escLifted :
@@ -187,7 +258,12 @@ def start():
             escLifted = False
         if paused:
             time.sleep(0.2)
+=======
+        if pauser.Action(pygame_key_input=pressed, screen=screen, font=myfont, pygame=pygame):
+            time.sleep(0.05)
+>>>>>>> c0f777a3589ed7a92b9c0da70dc28cab1e0b7898
             continue
+        fpsCounter.Action(pygame, screen, screenSizeX(), screenSizeY(), myfont )
         # Determing the direction of the snake based on input
         olddir = direction
         direction = determineDirection(pressed, olddir)
@@ -200,28 +276,13 @@ def start():
             rect = pygame.Rect(x,y, 5, 20)
         else :
             rect = pygame.Rect(x,y, 20, 5)
-        #pygame.draw.rect(screen, color, pygame.Rect(x,y, 20, 20))
         screen.fill((0,0,0))
         # Spawning apple
-        if not appleExist:
-            a.location = pygame.Rect(random.randint(20,screenSizeX()-20),
-                                     random.randint(20,screenSizeY()-20), a.size, a.size)
-            while table.checkCollision(a.location):
-                   a.location = pygame.Rect(random.randint(20,screenSizeX()-20),
-                                     random.randint(20,screenSizeY()-20), a.size, a.size)
-            appleExist = True
-        else:
-            # Eating
-            if a.location.colliderect(rect):
-                grow += 4
-                score = score + 10
-                #print("Score = ", score)
-                appleExist = False
+        grow, score = a.Action(pygame, screen, screenSizeX(), screenSizeY(),rect, grow, score, table)
         done = table.checkCollision(rect)
         s.location.put(rect)
         table.addRectangle(rect)
         s.draw(pygame, screen)
-        a.draw(pygame, screen)
         # if we do not grow the tail is removed
         if  grow <= 0:
             toremove = s.location.get()
@@ -232,20 +293,8 @@ def start():
         scoretext = "Score: " + str(score)
         label = myfont.render(scoretext, 1, (255,255,255))
         screen.blit(label, (10, 10))
-        # Measuring the frametime
-        t2 = int( round(time.time() * 1000))
-        frametime = t2 -t1
-        frametimesum += frametime
-        t1 = t2
-        # Displaying fps
-        if tickcount == 19:
-            avgframetime = frametimesum / 20
-            frametimesum = 0
-            fps = int(round(1000/avgframetime))
-        label2 = myfont.render(str(str(fps) + 'fps'), 1, (255,255,255))
-        screen.blit(label2, (screenSizeX()-120, screenSizeY()-40))
-        pygame.display.flip()
-        clock.tick(60)
+
+
         if done:
             #screen.fill((0,0,0))
             fscoretext = "Final score: " + str(score)
@@ -257,9 +306,7 @@ def start():
             screen.blit(creditsLabel2, (20,screenSizeY()-100))
             pygame.display.flip()
             time.sleep(5)
-        tickcount = tickcount +1
-        if tickcount == 20:
-            tickcount = 0
+
 
     print('Final score = ', score)
 
