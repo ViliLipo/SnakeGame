@@ -39,8 +39,6 @@ class Snake:
     location =  queue.Queue()
     direction = 1
     #def __init__(self, pygame, table, x, y):
-
-
     def draw( self, pygame, screen):
         que2 = queue.Queue()
         while not self.location.empty():
@@ -243,25 +241,8 @@ def start():
         clock.tick(60)
         pressed = pygame.key.get_pressed()
         # Pause functionality
-<<<<<<< HEAD
-        if not pressed[pygame.K_ESCAPE]:
-            escLifted = True
-        if pressed[pygame.K_ESCAPE] and not paused and escLifted :
-            paused = True
-            escLifted = False
-            pausedLabel = myfont.render("Paused", 1, (255,255,255))
-            pauseLabelLocX = screenSizeX() - 200
-            screen.blit(pausedLabel, (pauseLabelLocX, 30))
-            pygame.display.flip()
-        elif pressed[pygame.K_ESCAPE] and paused and escLifted :
-            paused = False
-            escLifted = False
-        if paused:
-            time.sleep(0.2)
-=======
         if pauser.Action(pygame_key_input=pressed, screen=screen, font=myfont, pygame=pygame):
             time.sleep(0.05)
->>>>>>> c0f777a3589ed7a92b9c0da70dc28cab1e0b7898
             continue
         fpsCounter.Action(pygame, screen, screenSizeX(), screenSizeY(), myfont )
         # Determing the direction of the snake based on input
@@ -293,8 +274,6 @@ def start():
         scoretext = "Score: " + str(score)
         label = myfont.render(scoretext, 1, (255,255,255))
         screen.blit(label, (10, 10))
-
-
         if done:
             #screen.fill((0,0,0))
             fscoretext = "Final score: " + str(score)
