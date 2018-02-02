@@ -13,7 +13,12 @@ class Apple:
     exists = False
     def draw(self, pygame, screen):
         pygame.draw.rect(screen, self.color, self.location)
+
+    '''
+    Excecutes all of the actions required of an apple during a gametick
+    '''
     def Action(self, pygame, screen , screenSizeX, screenSizeY, newRect, grow, score, table ):
+        #Spawning
         if not self.exists:
             self.location = pygame.Rect(random.randint(20,screenSizeX-20),
                                      random.randint(20,screenSizeY-20), self.size, self.size)
@@ -28,17 +33,28 @@ class Apple:
                 score = score + 10
                 #print("Score = ", score)
                 self.exists = False
+        #Rendering
         self.draw(pygame, screen)
         return grow, score
-
-
-
 
 class Snake:
     color = ( 8, 255, 8)
     location =  queue.Queue()
     direction = 1
-    #def __init__(self, pygame, table, x, y):
+    oldDirection = 1
+    grow = 0
+    headX = 30
+    headY = 30
+    head = ""
+    score = 0
+    def __init__(self, pygame, x, y):
+        self.headX = y
+        self.headY = x
+        self.head = pygame.Rect(x,y, 5, 20)
+        self.location.put(self.head)
+        self.grow = 2 #2
+        self.direction = 1
+
     def draw( self, pygame, screen):
         que2 = queue.Queue()
         while not self.location.empty():
@@ -47,6 +63,86 @@ class Snake:
             que2.put(loc)
         self.location = que2
 
+    '''
+    Excecutes all of the actions required of the snake during a game tick
+    '''
+    def Action(self, pygame, screen, screenSizeX, screenSizeY, table, pygame_key_input, apple ):
+        self.direction = self.determineDirection(pygame_key_input, self.oldDirection)
+        self.headX,self.headY = self.determineLocation(self.direction, self.oldDirection, self.headX, self.headY)
+        self.oldDirection = self.direction
+        if self.direction == 1 or self.direction == -1 :
+            self.head = pygame.Rect(self.headX,self.headY, 5, 20)
+        else :
+            self.head = pygame.Rect(self.headX,self.headY, 20, 5)
+        self.grow, self.score = apple.Action(pygame, screen, screenSizeX, screenSizeY, self.head, self.grow, self.score, table)
+        self.location.put(self.head)
+        # if we do not grow the tail is removed
+        if  self.grow <= 0:
+            toremove = self.location.get()
+            table.removeRectangle(toremove)
+        if self.grow > 0:
+            self.grow -= 1
+        self.draw(pygame, screen)
+
+    '''
+    Determines the direction of the snake based on keyboard input and the snakes old direction
+    Does not allow 180 turns
+    '''
+    def determineDirection(self, pressed, olddir):
+            if pressed[pygame.K_UP] and not olddir ==2:
+                return -2
+            elif pressed[pygame.K_DOWN] and not olddir == -2 :
+                return 2
+            elif pressed[pygame.K_LEFT] and not olddir == 1 :
+                return -1
+            elif pressed[pygame.K_RIGHT] and not olddir == -1:
+                return 1
+            else :
+                return olddir
+
+
+    '''
+    Determines the location of the snakes head based on its direction.
+    Does not let the snake to eat itself during turns
+    '''
+    def determineLocation(self, direction, olddir, x, y):
+        if direction == -2:
+            y -= 5
+        if direction == 2:
+            y += 5
+        if direction == -1:
+            x -= 5
+        if direction == 1:
+            x += 5
+        if olddir == 1 and direction == 2:
+            x -=15
+            y +=15
+        if olddir == 1 and direction == -2:
+            x  -= 15
+        if olddir == -1 and direction == 2:
+            y += 15
+        if olddir == -2 and direction == 1:
+            x += 15
+        if olddir == 2 and direction == 1:
+            x += 15
+            y -= 15
+        if olddir == 2 and direction == -1:
+            y -= 15
+        if x < 0:
+            x = screenSizeX() +x
+        elif x > screenSizeX():
+            x -= screenSizeX()
+        if y < 0:
+            y = screenSizeY() +y
+        elif y > screenSizeY():
+            y -=screenSizeY()
+        return x, y
+
+'''
+Datastructure where information about the snakes location is stored
+for checking collision in a constant O(1) time in relation to the snakes length.
+
+'''
 class Map:
     sizeX = 800
     sizeY = 800
@@ -100,53 +196,10 @@ class Map:
 
 
 
-def determineDirection(pressed, olddir):
-        if pressed[pygame.K_UP] and not olddir ==2:
-            return -2
-        elif pressed[pygame.K_DOWN] and not olddir == -2 :
-            return 2
-        elif pressed[pygame.K_LEFT] and not olddir == 1 :
-            return -1
-        elif pressed[pygame.K_RIGHT] and not olddir == -1:
-            return 1
-        else :
-            return olddir
-
-
-def determineLocation(direction, olddir, x, y):
-    if direction == -2:
-        y -= 5
-    if direction == 2:
-        y += 5
-    if direction == -1:
-        x -= 5
-    if direction == 1:
-        x += 5
-    if olddir == 1 and direction == 2:
-        x -=15
-        y +=15
-    if olddir == 1 and direction == -2:
-        x  -= 15
-    if olddir == -1 and direction == 2:
-        y += 15
-    if olddir == -2 and direction == 1:
-        x += 15
-    if olddir == 2 and direction == 1:
-        x += 15
-        y -= 15
-    if olddir == 2 and direction == -1:
-        y -= 15
-    if x < 0:
-        x = screenSizeX() +x
-    elif x > screenSizeX():
-        x -= screenSizeX()
-    if y < 0:
-        y = screenSizeY() +y
-    elif y > screenSizeY():
-        y -=screenSizeY()
-
-    return x, y
-
+'''
+Pauser is a simple utility for allowing pause action.
+Resume action needs a distinct keypress.
+'''
 class Pauser:
     isPaused = False
     escLifted = True
@@ -168,6 +221,11 @@ class Pauser:
             self.escLifted = False
         return self.isPaused
 
+
+'''
+FpsCounter is a simple utility for caclulating and
+rendering current fps to the game window
+'''
 class FpsCounter :
     tickcount = 1
     t1 = 0
@@ -198,6 +256,15 @@ class FpsCounter :
         self.tickcount += 1
 
 
+def renderEndScreen(pygame,screen, font, score):
+    fscoretext = "Final score: " + str(score)
+    flabel = font.render(fscoretext, 1, (255,255,255))
+    creditsLabel1 = font.render("Game by Vili Lipo 2017", 1, (255,255,255))
+    creditsLabel2 = font.render("runs on  PyGame", 1, (255,255,255))
+    screen.blit(flabel,((screenSizeX()/2) -200, screenSizeY()/2))
+    screen.blit(creditsLabel1, (20,screenSizeY()-200))
+    screen.blit(creditsLabel2, (20,screenSizeY()-100))
+    pygame.display.flip()
 
 
 def screenSizeX():
@@ -223,16 +290,11 @@ def start():
     pauser = Pauser()
     fpsCounter = FpsCounter()
     #Creating the snek
+    table = Map()
     x  = 30
     y = 30
-    direction = 1
-    table = Map()
     table.makedata(screenSizeX(), screenSizeY())
-    s = Snake()
-    firstPiece = pygame.Rect(x,y, 5, 20)
-    s.location.put(firstPiece)
-    table.addRectangle(firstPiece)
-    grow = 2 #2
+    s = Snake(pygame,x, y)
     # main loop
     while not done :
         for event in pygame.event.get():
@@ -245,45 +307,18 @@ def start():
             time.sleep(0.05)
             continue
         fpsCounter.Action(pygame, screen, screenSizeX(), screenSizeY(), myfont )
-        # Determing the direction of the snake based on input
-        olddir = direction
-        direction = determineDirection(pressed, olddir)
-        #print(direction)
-        x , y = determineLocation(direction, olddir, x,y)
-        #print(x , y)
-        #print(olddir)
-        rect = pygame.Rect
-        if direction == 1 or direction == -1 :
-            rect = pygame.Rect(x,y, 5, 20)
-        else :
-            rect = pygame.Rect(x,y, 20, 5)
         screen.fill((0,0,0))
         # Spawning apple
-        grow, score = a.Action(pygame, screen, screenSizeX(), screenSizeY(),rect, grow, score, table)
-        done = table.checkCollision(rect)
-        s.location.put(rect)
-        table.addRectangle(rect)
-        s.draw(pygame, screen)
-        # if we do not grow the tail is removed
-        if  grow <= 0:
-            toremove = s.location.get()
-            table.removeRectangle(toremove)
-        if grow > 0:
-            grow -= 1
+        s.Action(pygame, screen, screenSizeX(), screenSizeY(), table, pressed, a)
+        done = table.checkCollision(s.head)
+        table.addRectangle(s.head)
         # Rendering the scoretext
-        scoretext = "Score: " + str(score)
+        scoretext = "Score: " + str(s.score)
         label = myfont.render(scoretext, 1, (255,255,255))
         screen.blit(label, (10, 10))
         if done:
             #screen.fill((0,0,0))
-            fscoretext = "Final score: " + str(score)
-            flabel = myfont.render(fscoretext, 1, (255,255,255))
-            creditsLabel1 = myfont.render("Game by Vili Lipo 2017", 1, (255,255,255))
-            creditsLabel2 = myfont.render("Uses PyGame", 1, (255,255,255))
-            screen.blit(flabel,((screenSizeX()/2) -200, screenSizeY()/2))
-            screen.blit(creditsLabel1, (20,screenSizeY()-200))
-            screen.blit(creditsLabel2, (20,screenSizeY()-100))
-            pygame.display.flip()
+            renderEndScreen(pygame, screen, myfont, s.score)
             time.sleep(5)
 
 
