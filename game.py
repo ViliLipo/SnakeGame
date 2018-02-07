@@ -45,7 +45,7 @@ class Snake:
         self.head = pygame.Rect(x,y, 5, 20)
         self.location = queue.Queue()
         self.location.put(self.head)
-        self.grow = 2 #2
+        self.grow = 3 #2
         self.direction = 1
         self.oldDirection = 1
         self.directionBuffer = 1
@@ -101,7 +101,7 @@ class Snake:
             return self.oldDirection
         else:
             if value != self.oldDirection:
-                self.turning = 3
+                self.turning = 4
             return value
 
 
@@ -265,17 +265,8 @@ def screenSizeX():
 def screenSizeY():
     return 800
 
-def end_screen(pygame,screen, font, score):
-    fscoretext = "Final score: " + str(score)
-    flabel = font.render(fscoretext, 1, (255,255,255))
-    creditsLabel1 = font.render("Game by Vili Lipo 2017", 1, (255,255,255))
-    creditsLabel2 = font.render("runs on  PyGame, Press any key to quit", 1, (255,255,255))
-    screen.blit(flabel,((screenSizeX()/2) -200, screenSizeY()/2))
-    screen.blit(creditsLabel1, (20,screenSizeY()-200))
-    screen.blit(creditsLabel2, (20,screenSizeY()-100))
-    pygame.display.flip()
+def waitForInput(pygame):
     done = False
-    time.sleep(2)
     while not done:
         time.sleep(0.011)
         for event in pygame.event.get():
@@ -284,6 +275,7 @@ def end_screen(pygame,screen, font, score):
         pressed = pygame.key.get_pressed()
         for val in pressed:
             if val == True:
+                print(val)
                 done = True
 
 def main():
@@ -295,6 +287,7 @@ def start():
     pygame.display.set_caption("Le Snek")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("monospace", 40)
+    score = 0
     start_screen(pygame, screen, clock,  font)
     score = game(pygame, screen, clock, font)
     end_screen(pygame, screen, font, score)
@@ -305,15 +298,21 @@ def start_screen(pygame, screen, clock, font):
     screen.blit(label, (10,10))
     done = False
     pygame.display.flip()
-    while not done:
-        time.sleep(0.011)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit(0)
-        pressed = pygame.key.get_pressed()
-        for val in pressed:
-            if val == True:
-                done = True
+    waitForInput(pygame)
+
+def end_screen(pygame,screen, font, score):
+    fscoretext = "Final score: " + str(score)
+    flabel = font.render(fscoretext, 1, (255,255,255))
+    creditsLabel1 = font.render("Game by Vili Lipo 2017", 1, (255,255,255))
+    creditsLabel2 = font.render("runs on  PyGame, Press any key to quit", 1, (255,255,255))
+    screen.blit(flabel,((screenSizeX()/2) -200, screenSizeY()/2))
+    screen.blit(creditsLabel1, (20,screenSizeY()-200))
+    screen.blit(creditsLabel2, (20,screenSizeY()-100))
+    pygame.display.flip()
+    time.sleep(2)
+    waitForInput(pygame)
+
+
 
 def game(pygame, screen, clock, font):
     #initializing
