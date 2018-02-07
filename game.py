@@ -322,7 +322,7 @@ def start():
             time.sleep(5)
 
 
-    print('Final score = ', score)
+    print('Final score = ', s.score)
 
 
 main()
