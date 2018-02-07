@@ -39,21 +39,18 @@ class Apple:
 
 class Snake:
     color = ( 8, 255, 8)
-    location =  queue.Queue()
-    direction = 1
-    oldDirection = 1
-    grow = 0
-    headX = 30
-    headY = 30
-    head = ""
-    score = 0
     def __init__(self, pygame, x, y):
         self.headX = y
         self.headY = x
         self.head = pygame.Rect(x,y, 5, 20)
+        self.location = queue.Queue()
         self.location.put(self.head)
         self.grow = 2 #2
         self.direction = 1
+        self.oldDirection = 1
+        self.directionBuffer = 1
+        self.turning = 0
+        self.score = 0
 
     def draw( self, pygame, screen):
         que2 = queue.Queue()
@@ -67,7 +64,7 @@ class Snake:
     Excecutes all of the actions required of the snake during a game tick
     '''
     def Action(self, pygame, screen, screenSizeX, screenSizeY, table, pygame_key_input, apple ):
-        self.direction = self.determineDirection(pygame_key_input, self.oldDirection)
+        self.direction = self.determineDirection(pygame_key_input)
         self.headX,self.headY = self.determineLocation(self.direction, self.oldDirection, self.headX, self.headY)
         self.oldDirection = self.direction
         if self.direction == 1 or self.direction == -1 :
@@ -88,17 +85,24 @@ class Snake:
     Determines the direction of the snake based on keyboard input and the snakes old direction
     Does not allow 180 turns
     '''
-    def determineDirection(self, pressed, olddir):
-            if pressed[pygame.K_UP] and not olddir ==2:
-                return -2
-            elif pressed[pygame.K_DOWN] and not olddir == -2 :
-                return 2
-            elif pressed[pygame.K_LEFT] and not olddir == 1 :
-                return -1
-            elif pressed[pygame.K_RIGHT] and not olddir == -1:
-                return 1
-            else :
-                return olddir
+    def determineDirection(self, pressed):
+        value = self.oldDirection
+        if pressed[pygame.K_UP] and not self.oldDirection == 2:
+            value = -2
+        elif pressed[pygame.K_DOWN] and not self.oldDirection == -2 :
+            value = 2
+        elif pressed[pygame.K_LEFT] and not self.oldDirection == 1 :
+            value = -1
+        elif pressed[pygame.K_RIGHT] and not self.oldDirection == -1:
+            value =  1
+        if self.turning > 0:
+            self.turning -= 1
+            self.directionBuffer = value
+            return self.oldDirection
+        else:
+            if value != self.oldDirection:
+                self.turning = 3
+            return value
 
 
     '''
@@ -271,7 +275,7 @@ def end_screen(pygame,screen, font, score):
     screen.blit(creditsLabel2, (20,screenSizeY()-100))
     pygame.display.flip()
     done = False
-    time.sleep(1)
+    time.sleep(2)
     while not done:
         time.sleep(0.011)
         for event in pygame.event.get():
@@ -315,8 +319,6 @@ def game(pygame, screen, clock, font):
     #initializing
     done = False
     a = Apple()
-    score = 0
-
     pauser = Pauser()
     fpsCounter = FpsCounter()
     #Creating the snek
