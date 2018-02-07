@@ -255,38 +255,68 @@ class FpsCounter :
         pygame.display.flip()
         self.tickcount += 1
 
-
-def renderEndScreen(pygame,screen, font, score):
-    fscoretext = "Final score: " + str(score)
-    flabel = font.render(fscoretext, 1, (255,255,255))
-    creditsLabel1 = font.render("Game by Vili Lipo 2017", 1, (255,255,255))
-    creditsLabel2 = font.render("runs on  PyGame", 1, (255,255,255))
-    screen.blit(flabel,((screenSizeX()/2) -200, screenSizeY()/2))
-    screen.blit(creditsLabel1, (20,screenSizeY()-200))
-    screen.blit(creditsLabel2, (20,screenSizeY()-100))
-    pygame.display.flip()
-
-
 def screenSizeX():
     return 800
 
 def screenSizeY():
     return 800
 
+def end_screen(pygame,screen, font, score):
+    fscoretext = "Final score: " + str(score)
+    flabel = font.render(fscoretext, 1, (255,255,255))
+    creditsLabel1 = font.render("Game by Vili Lipo 2017", 1, (255,255,255))
+    creditsLabel2 = font.render("runs on  PyGame, Press any key to quit", 1, (255,255,255))
+    screen.blit(flabel,((screenSizeX()/2) -200, screenSizeY()/2))
+    screen.blit(creditsLabel1, (20,screenSizeY()-200))
+    screen.blit(creditsLabel2, (20,screenSizeY()-100))
+    pygame.display.flip()
+    done = False
+    time.sleep(1)
+    while not done:
+        time.sleep(0.011)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit(0)
+        pressed = pygame.key.get_pressed()
+        for val in pressed:
+            if val == True:
+                done = True
 
 def main():
     start()
 
 def start():
-    #initializing
     pygame.init()
     screen = pygame.display.set_mode((screenSizeX(),screenSizeY()))
     pygame.display.set_caption("Le Snek")
     clock = pygame.time.Clock()
+    font = pygame.font.SysFont("monospace", 40)
+    start_screen(pygame, screen, clock,  font)
+    score = game(pygame, screen, clock, font)
+    end_screen(pygame, screen, font, score)
+
+def start_screen(pygame, screen, clock, font):
+    message = "Press any button to start"
+    label = font.render(message, 5, (255,255,255))
+    screen.blit(label, (10,10))
+    done = False
+    pygame.display.flip()
+    while not done:
+        time.sleep(0.011)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit(0)
+        pressed = pygame.key.get_pressed()
+        for val in pressed:
+            if val == True:
+                done = True
+
+def game(pygame, screen, clock, font):
+    #initializing
     done = False
     a = Apple()
     score = 0
-    myfont = pygame.font.SysFont("monospace", 40)
+
     pauser = Pauser()
     fpsCounter = FpsCounter()
     #Creating the snek
@@ -303,10 +333,10 @@ def start():
         clock.tick(60)
         pressed = pygame.key.get_pressed()
         # Pause functionality
-        if pauser.Action(pygame_key_input=pressed, screen=screen, font=myfont, pygame=pygame):
+        if pauser.Action(pygame_key_input=pressed, screen=screen, font=font, pygame=pygame):
             time.sleep(0.05)
             continue
-        fpsCounter.Action(pygame, screen, screenSizeX(), screenSizeY(), myfont )
+        fpsCounter.Action(pygame, screen, screenSizeX(), screenSizeY(), font )
         screen.fill((0,0,0))
         # Spawning apple
         s.Action(pygame, screen, screenSizeX(), screenSizeY(), table, pressed, a)
@@ -314,15 +344,10 @@ def start():
         table.addRectangle(s.head)
         # Rendering the scoretext
         scoretext = "Score: " + str(s.score)
-        label = myfont.render(scoretext, 1, (255,255,255))
+        label = font.render(scoretext, 1, (255,255,255))
         screen.blit(label, (10, 10))
-        if done:
-            #screen.fill((0,0,0))
-            renderEndScreen(pygame, screen, myfont, s.score)
-            time.sleep(5)
-
-
-    print('Final score = ', s.score)
+    return s.score
+    #print('Final score = ', s.score)
 
 
 main()
