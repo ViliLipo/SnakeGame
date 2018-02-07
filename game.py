@@ -269,14 +269,16 @@ def waitForInput(pygame):
     done = False
     while not done:
         time.sleep(0.011)
+        i = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit(0)
         pressed = pygame.key.get_pressed()
         for val in pressed:
             if val == True:
-                print(val)
+                print(pygame.key.name(i))
                 done = True
+            i +=1
 
 def main():
     start()
