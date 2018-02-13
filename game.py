@@ -275,7 +275,7 @@ def waitForInput(pygame):
                 exit(0)
         pressed = pygame.key.get_pressed()
         for val in pressed:
-            if val == True:
+            if val == True and -1 == pygame.key.name(i).find("lock"):
                 print(pygame.key.name(i))
                 done = True
             i +=1
