@@ -2,7 +2,7 @@ import pygame
 import random
 import queue
 import time
-
+import score_service
 
 
 
@@ -267,6 +267,7 @@ def screenSizeY():
 
 def waitForInput(pygame):
     done = False
+    time.sleep(1)
     while not done:
         time.sleep(0.011)
         i = 0
@@ -293,6 +294,8 @@ def start():
     start_screen(pygame, screen, clock,  font)
     score = game(pygame, screen, clock, font)
     end_screen(pygame, screen, font, score)
+    score_screen(pygame, screen, font, score)
+
 
 def start_screen(pygame, screen, clock, font):
     message = "Press any button to start"
@@ -311,9 +314,29 @@ def end_screen(pygame,screen, font, score):
     screen.blit(creditsLabel1, (20,screenSizeY()-200))
     screen.blit(creditsLabel2, (20,screenSizeY()-100))
     pygame.display.flip()
-    time.sleep(2)
     waitForInput(pygame)
 
+def score_screen(pygame, screen, font, score):
+    scorelist = score_service.readFile()
+    if score > 0:
+        scorelist.append(score)
+    score_service.writeFile(scorelist)
+    screen.fill((0,0,0))
+    headerlabel = font.render("HighScores ", 1, (255,255,255))
+    screen.blit(headerlabel, (50,50))
+    x = 100
+    y = 100
+    for i in range (0 , 10):
+        try:
+            di = i +1
+            scoretext = str(di) + ": " + str(scorelist[i])
+            label = font.render(scoretext, 1, (255,255,255))
+            screen.blit(label, (x, y))
+            y +=50
+        except:
+            break
+    pygame.display.flip()
+    waitForInput(pygame)
 
 
 def game(pygame, screen, clock, font):
